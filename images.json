@@ -1,0 +1,37 @@
+{
+    "avatars": [
+        {
+            "id": "001",
+            "name": "祈",
+            "file": "avatars/001.jpg"
+        },
+        {
+            "id": "002",
+            "name": "消波塊批發商",
+            "file": "avatars/002.jpg"
+        },
+        {
+            "id": "003",
+            "name": "角色三",
+            "file": "avatars/003.jpg"
+        }
+    ],
+
+    "pictures": [
+        {
+            "id": "001",
+            "name": "活動圖片",
+            "file": "pictures/001.png"
+        },
+        {
+            "id": "002",
+            "name": "圖片二",
+            "file": "pictures/002.jpg"
+        },
+        {
+            "id": "003",
+            "name": "圖片三",
+            "file": "pictures/003.png"
+        }
+    ]
+}
