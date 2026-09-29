@@ -1,0 +1,2787 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Chat Screenshot Generator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Noto Sans TC",
+        "Microsoft JhengHei",
+        Arial,
+        sans-serif;
+    background: #eeeeee;
+    color: #222;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* =========================================================
+   EDITOR
+========================================================= */
+
+.editor {
+    width: 430px;
+    min-width: 430px;
+    background: #f7f7f7;
+    border-right: 1px solid #ddd;
+    padding: 18px;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.editor h1 {
+    font-size: 22px;
+    margin: 0 0 18px;
+}
+
+.editor-section {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.editor-section h2 {
+    font-size: 16px;
+    margin: 0 0 12px;
+}
+
+.field {
+    margin-bottom: 10px;
+}
+
+.field:last-child {
+    margin-bottom: 0;
+}
+
+.field label {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.field input,
+.field textarea,
+.field select {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 9px 10px;
+    background: white;
+    outline: none;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+    border-color: #4c9aff;
+}
+
+.field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn-row {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 12px;
+    background: #e7e7e7;
+    color: #222;
+    font-size: 13px;
+}
+
+.btn:hover {
+    background: #dcdcdc;
+}
+
+.btn-primary {
+    background: #1677ff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0869ec;
+}
+
+.btn-danger {
+    background: #ffdddd;
+    color: #b40000;
+}
+
+.btn-small {
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+/* =========================================================
+   USERS
+========================================================= */
+
+.users {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.user-box {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.user-box h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.avatar-preview {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #ddd;
+    margin-bottom: 8px;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-drop {
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    padding: 7px;
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+    margin-top: 7px;
+}
+
+.avatar-drop.dragover {
+    border-color: #1677ff;
+    background: #eaf3ff;
+}
+
+/* =========================================================
+   IMAGE LIBRARY
+========================================================= */
+
+.library-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.library-tab {
+    flex: 1;
+    border: 1px solid #ddd;
+    background: #f2f2f2;
+    border-radius: 7px;
+    padding: 7px;
+    font-size: 12px;
+}
+
+.library-tab.active {
+    background: #1677ff;
+    color: white;
+    border-color: #1677ff;
+}
+
+.library {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.image-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    padding: 5px;
+    cursor: grab;
+    user-select: none;
+}
+
+.image-item:active {
+    cursor: grabbing;
+}
+
+.image-item:hover {
+    border-color: #1677ff;
+}
+
+.image-item img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 5px;
+    background: #eee;
+}
+
+.image-id {
+    font-size: 11px;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.image-name {
+    font-size: 10px;
+    color: #777;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.library-empty {
+    grid-column: 1 / -1;
+    padding: 20px;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+}
+
+/* =========================================================
+   MESSAGE EDITOR
+========================================================= */
+
+.message-editor {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: white;
+}
+
+.message-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f1f1f1;
+    padding: 7px 9px;
+}
+
+.message-number {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.message-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.message-editor-body {
+    padding: 9px;
+}
+
+.message-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.message-grid .full {
+    grid-column: 1 / -1;
+}
+
+.message-editor input,
+.message-editor textarea,
+.message-editor select {
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    padding: 7px;
+    font-size: 12px;
+}
+
+.message-editor textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.image-message-editor {
+    margin-top: 8px;
+    border: 1px dashed #bbb;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.image-message-drop {
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    min-height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #777;
+    font-size: 11px;
+    margin-top: 7px;
+}
+
+.image-message-drop.dragover {
+    border-color: #1677ff;
+    background: #eaf3ff;
+}
+
+.image-message-preview {
+    max-width: 130px;
+    max-height: 100px;
+    display: block;
+    border-radius: 7px;
+    margin: 5px auto;
+}
+
+/* =========================================================
+   QUICK INPUT
+========================================================= */
+
+.quick-help {
+    font-size: 11px;
+    color: #777;
+    line-height: 1.5;
+    margin-bottom: 7px;
+}
+
+/* =========================================================
+   PREVIEW AREA
+========================================================= */
+
+.preview-area {
+    flex: 1;
+    min-width: 0;
+    background: #d8d8d8;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px;
+    overflow: auto;
+}
+
+.preview-wrap {
+    width: 400px;
+}
+
+.preview-label {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+/* =========================================================
+   CHAT SCREEN
+   保留原本手機聊天畫面的概念
+========================================================= */
+
+.chat-container {
+    width: 400px;
+    min-height: 600px;
+    background: #b2d7ff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 5px 25px rgba(0,0,0,.18);
+}
+
+/* =========================================================
+   STATUS BAR
+========================================================= */
+
+.status-bar {
+    height: 25px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 9px;
+    font-size: 12px;
+    color: #111;
+}
+
+.status-left {
+    font-weight: 600;
+}
+
+.status-right {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.status-icon {
+    font-size: 11px;
+}
+
+/* =========================================================
+   TITLE BAR
+========================================================= */
+
+.title-bar {
+    height: 48px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.title {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.title-side {
+    width: 75px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.title-side.right {
+    justify-content: flex-end;
+}
+
+.title-icon {
+    font-size: 17px;
+    color: #222;
+}
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.date-row {
+    text-align: center;
+    padding: 10px 0 5px;
+}
+
+.date-pill {
+    display: inline-block;
+    background: rgba(255,255,255,.75);
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #555;
+}
+
+/* =========================================================
+   CHAT BODY
+========================================================= */
+
+.chat-body {
+    padding: 5px 10px 75px;
+}
+
+.message-row {
+    display: flex;
+    align-items: flex-end;
+    margin: 10px 0;
+    gap: 7px;
+}
+
+.message-row.left {
+    justify-content: flex-start;
+}
+
+.message-row.right {
+    justify-content: flex-end;
+}
+
+.message-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex: 0 0 38px;
+    background: #ddd;
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.message-content {
+    max-width: 275px;
+}
+
+.message-name {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 3px;
+}
+
+.message-row.right .message-name {
+    text-align: right;
+}
+
+.bubble {
+    padding: 9px 11px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.message-row.left .bubble {
+    background: #ffffff;
+    border-bottom-left-radius: 4px;
+}
+
+.message-row.right .bubble {
+    background: #95e36c;
+    border-bottom-right-radius: 4px;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+    font-size: 9px;
+    color: #666;
+}
+
+.message-row.right .message-meta {
+    justify-content: flex-end;
+}
+
+.read {
+    color: #4285f4;
+}
+
+.chat-image {
+    max-width: 220px;
+    max-height: 300px;
+    display: block;
+    border-radius: 10px;
+    object-fit: contain;
+}
+
+/* =========================================================
+   INPUT BAR
+========================================================= */
+
+.chat-input-area {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 40px;
+    height: 45px;
+    background: #f7f7f7;
+    border-top: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 9px;
+}
+
+.chat-input-plus {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #bbb;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.chat-input {
+    flex: 1;
+    height: 30px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    background: white;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    color: #888;
+    font-size: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* =========================================================
+   BOTTOM NAV
+========================================================= */
+
+.bottom-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 40px;
+    background: white;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.bottom-nav-item {
+    font-size: 11px;
+    color: #555;
+}
+
+/* =========================================================
+   DOWNLOAD AREA
+========================================================= */
+
+.download-area {
+    display: flex;
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.download-area select {
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 9px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+    .app {
+        display: block;
+    }
+
+    .editor {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .preview-area {
+        min-height: 700px;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 430px) {
+    .preview-area {
+        padding: 0;
+    }
+
+    .preview-wrap,
+    .chat-container {
+        width: 400px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =====================================================
+         EDITOR
+    ====================================================== -->
+
+    <aside class="editor">
+
+        <h1>Chat Screenshot Generator</h1>
+
+        <!-- BASIC SETTINGS -->
+        <section class="editor-section">
+
+            <h2>基本設定</h2>
+
+            <div class="field">
+                <label>聊天室標題</label>
+                <input
+                    id="titleInput"
+                    value="聊天室"
+                    oninput="updatePreview()"
+                >
+            </div>
+
+            <div class="field">
+                <label>日期</label>
+                <input
+                    id="dateInput"
+                    value="2026年9月29日"
+                    oninput="updatePreview()"
+                >
+            </div>
+
+            <div class="field">
+                <label>手機時間</label>
+                <input
+                    id="timeInput"
+                    value="16:13"
+                    oninput="updatePreview()"
+                >
+            </div>
+
+            <div class="field">
+                <label>底部輸入框文字</label>
+                <input
+                    id="inputText"
+                    value="訊息"
+                    oninput="updatePreview()"
+                >
+            </div>
+
+        </section>
+
+
+        <!-- USERS -->
+        <section class="editor-section">
+
+            <h2>角色 / 頭像</h2>
+
+            <div class="users">
+
+                <!-- LEFT USER -->
+                <div class="user-box">
+
+                    <h3>左側角色</h3>
+
+                    <div
+                        class="avatar-preview"
+                        id="leftAvatarPreview"
+                    ></div>
+
+                    <div class="field">
+                        <label>角色名稱</label>
+                        <input
+                            id="leftName"
+                            value="祈"
+                            oninput="updatePreview()"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>頭像編號</label>
+
+                        <div style="display:flex;gap:5px;">
+                            <input
+                                id="leftAvatarNumber"
+                                placeholder="例如 001"
+                            >
+
+                            <button
+                                class="btn btn-small"
+                                onclick="applyAvatarNumber('left')"
+                            >
+                                套用
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="avatar-drop"
+                        data-avatar-side="left"
+                    >
+                        把圖片拖到這裡
+                    </div>
+
+                </div>
+
+
+                <!-- RIGHT USER -->
+                <div class="user-box">
+
+                    <h3>右側角色</h3>
+
+                    <div
+                        class="avatar-preview"
+                        id="rightAvatarPreview"
+                    ></div>
+
+                    <div class="field">
+                        <label>角色名稱</label>
+                        <input
+                            id="rightName"
+                            value="消波塊批發商"
+                            oninput="updatePreview()"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label>頭像編號</label>
+
+                        <div style="display:flex;gap:5px;">
+                            <input
+                                id="rightAvatarNumber"
+                                placeholder="例如 002"
+                            >
+
+                            <button
+                                class="btn btn-small"
+                                onclick="applyAvatarNumber('right')"
+                            >
+                                套用
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="avatar-drop"
+                        data-avatar-side="right"
+                    >
+                        把圖片拖到這裡
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- IMAGE LIBRARY -->
+        <section class="editor-section">
+
+            <h2>圖片庫</h2>
+
+            <div class="quick-help">
+                圖片可以直接拖曳到頭像或指定對話。
+                也可以輸入圖片編號使用。
+            </div>
+
+            <div class="library-tabs">
+
+                <button
+                    id="avatarTab"
+                    class="library-tab active"
+                    onclick="switchLibrary('avatars')"
+                >
+                    頭像
+                </button>
+
+                <button
+                    id="pictureTab"
+                    class="library-tab"
+                    onclick="switchLibrary('pictures')"
+                >
+                    聊天圖片
+                </button>
+
+            </div>
+
+            <div
+                id="imageLibrary"
+                class="library"
+            ></div>
+
+        </section>
+
+
+        <!-- QUICK MESSAGE -->
+        <section class="editor-section">
+
+            <h2>快速建立對話</h2>
+
+            <div class="quick-help">
+                每行一則：<br>
+                <b>左|時間|內容</b><br>
+                <b>右|時間|內容</b><br><br>
+
+                例如：<br>
+                左|16:01|你吃飯了嗎？<br>
+                右|16:02|還沒。
+            </div>
+
+            <div class="field">
+                <textarea
+                    id="quickMessages"
+                    placeholder="左|16:01|你吃飯了嗎？
+右|16:02|還沒。
+左|16:03|那等等一起吃。"
+                ></textarea>
+            </div>
+
+            <button
+                class="btn btn-primary"
+                onclick="applyQuickMessages()"
+            >
+                套用到訊息
+            </button>
+
+        </section>
+
+
+        <!-- MESSAGE EDITOR -->
+        <section class="editor-section">
+
+            <h2>訊息編輯</h2>
+
+            <div id="messagesEditor"></div>
+
+            <button
+                class="btn btn-primary"
+                onclick="addMessage()"
+            >
+                ＋ 新增訊息
+            </button>
+
+        </section>
+
+
+        <!-- DOWNLOAD -->
+        <section class="editor-section">
+
+            <h2>輸出圖片</h2>
+
+            <div class="download-area">
+
+                <select id="scaleSelect">
+                    <option value="2">2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                </select>
+
+                <button
+                    class="btn btn-primary"
+                    onclick="downloadChat()"
+                >
+                    下載 PNG
+                </button>
+
+            </div>
+
+        </section>
+
+    </aside>
+
+
+    <!-- =====================================================
+         PREVIEW
+    ====================================================== -->
+
+    <main class="preview-area">
+
+        <div class="preview-wrap">
+
+            <div class="preview-label">
+                即時預覽
+            </div>
+
+            <div
+                id="chat"
+                class="chat-container"
+            >
+
+                <!-- STATUS -->
+                <div class="status-bar">
+
+                    <div
+                        id="previewTime"
+                        class="status-left"
+                    >
+                        16:13
+                    </div>
+
+                    <div class="status-right">
+                        <span class="status-icon">▮▮▮</span>
+                        <span class="status-icon">WiFi</span>
+                        <span class="status-icon">▰</span>
+                    </div>
+
+                </div>
+
+
+                <!-- TITLE -->
+                <div class="title-bar">
+
+                    <div class="title-side">
+                        <span class="title-icon">‹</span>
+                    </div>
+
+                    <div
+                        id="previewTitle"
+                        class="title"
+                    >
+                        聊天室
+                    </div>
+
+                    <div class="title-side right">
+                        <span class="title-icon">⌕</span>
+                        <span class="title-icon">⋮</span>
+                    </div>
+
+                </div>
+
+
+                <!-- DATE -->
+                <div class="date-row">
+
+                    <span
+                        id="previewDate"
+                        class="date-pill"
+                    >
+                        2026年9月29日
+                    </span>
+
+                </div>
+
+
+                <!-- MESSAGES -->
+                <div
+                    id="chatBody"
+                    class="chat-body"
+                ></div>
+
+
+                <!-- INPUT -->
+                <div class="chat-input-area">
+
+                    <div class="chat-input-plus">
+                        +
+                    </div>
+
+                    <div
+                        id="previewInput"
+                        class="chat-input"
+                    >
+                        訊息
+                    </div>
+
+                </div>
+
+
+                <!-- BOTTOM NAV -->
+                <div class="bottom-nav">
+
+                    <div class="bottom-nav-item">
+                        ＋
+                    </div>
+
+                    <div class="bottom-nav-item">
+                        圖片
+                    </div>
+
+                    <div class="bottom-nav-item">
+                        語音
+                    </div>
+
+                    <div class="bottom-nav-item">
+                        設定
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+<script>
+
+/* =========================================================
+   GLOBAL DATA
+========================================================= */
+
+let imageData = {
+    avatars: [],
+    pictures: []
+};
+
+let currentLibrary = "avatars";
+
+let state = {
+
+    leftAvatar: null,
+
+    rightAvatar: null,
+
+    messages: [
+
+        {
+            id: createId(),
+            side: "left",
+            time: "16:01",
+            read: false,
+            type: "text",
+            text: "你吃飯了嗎？",
+            image: null
+        },
+
+        {
+            id: createId(),
+            side: "right",
+            time: "16:02",
+            read: true,
+            type: "text",
+            text: "還沒。",
+            image: null
+        },
+
+        {
+            id: createId(),
+            side: "left",
+            time: "16:03",
+            read: true,
+            type: "text",
+            text: "那等等一起吃。",
+            image: null
+        }
+
+    ]
+
+};
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    setupDragAndDrop();
+
+    await loadImages();
+
+    renderLibrary();
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+});
+
+
+/* =========================================================
+   LOAD images.json
+========================================================= */
+
+async function loadImages() {
+
+    try {
+
+        const response = await fetch("./images.json", {
+            cache: "no-cache"
+        });
+
+        if (!response.ok) {
+            throw new Error("images.json 載入失敗");
+        }
+
+        imageData = await response.json();
+
+    } catch (error) {
+
+        console.error(error);
+
+        /*
+         * 如果 images.json 不存在，
+         * 先提供範例資料，方便測試。
+         */
+
+        imageData = {
+
+            avatars: [
+                {
+                    id: "001",
+                    name: "頭像 001",
+                    file: "avatars/001.jpg"
+                },
+                {
+                    id: "002",
+                    name: "頭像 002",
+                    file: "avatars/002.jpg"
+                }
+            ],
+
+            pictures: [
+                {
+                    id: "001",
+                    name: "圖片 001",
+                    file: "pictures/001.png"
+                },
+                {
+                    id: "002",
+                    name: "圖片 002",
+                    file: "pictures/002.jpg"
+                }
+            ]
+
+        };
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE ID
+========================================================= */
+
+function createId() {
+
+    return Date.now().toString(36) +
+           Math.random().toString(36).substring(2);
+
+}
+
+
+/* =========================================================
+   IMAGE LIBRARY
+========================================================= */
+
+function switchLibrary(type) {
+
+    currentLibrary = type;
+
+    document
+        .getElementById("avatarTab")
+        .classList.toggle(
+            "active",
+            type === "avatars"
+        );
+
+    document
+        .getElementById("pictureTab")
+        .classList.toggle(
+            "active",
+            type === "pictures"
+        );
+
+    renderLibrary();
+
+}
+
+
+function renderLibrary() {
+
+    const library =
+        document.getElementById("imageLibrary");
+
+    library.innerHTML = "";
+
+    const list =
+        imageData[currentLibrary] || [];
+
+    if (!list.length) {
+
+        library.innerHTML = `
+            <div class="library-empty">
+                沒有圖片
+            </div>
+        `;
+
+        return;
+    }
+
+
+    list.forEach(item => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "image-item";
+
+        div.draggable = true;
+
+        div.dataset.type = currentLibrary;
+        div.dataset.id = item.id;
+        div.dataset.file = item.file;
+
+
+        div.innerHTML = `
+
+            <img
+                src="${escapeAttribute(item.file)}"
+                draggable="false"
+            >
+
+            <div class="image-id">
+                ${escapeHtml(item.id)}
+            </div>
+
+            <div class="image-name">
+                ${escapeHtml(item.name || "")}
+            </div>
+
+        `;
+
+
+        div.addEventListener(
+            "dragstart",
+            event => {
+
+                const payload = {
+
+                    type: currentLibrary,
+
+                    id: item.id,
+
+                    file: item.file,
+
+                    name: item.name || ""
+
+                };
+
+                event.dataTransfer.setData(
+                    "application/json",
+                    JSON.stringify(payload)
+                );
+
+                event.dataTransfer.effectAllowed =
+                    "copy";
+
+            }
+        );
+
+
+        /*
+         * 點圖片也可以直接選取。
+         * 頭像庫：直接套用到左側。
+         * 圖片庫：如果目前存在訊息圖片，
+         * 可用編號方式指定。
+         */
+
+        div.addEventListener(
+            "click",
+            () => {
+
+                if (currentLibrary === "avatars") {
+
+                    state.leftAvatar = item;
+
+                    updateAvatarPreview();
+
+                    updatePreview();
+
+                }
+
+            }
+        );
+
+
+        library.appendChild(div);
+
+    });
+
+}
+
+
+/* =========================================================
+   FIND IMAGE
+========================================================= */
+
+function findImage(type, id) {
+
+    const cleanId =
+        String(id)
+            .trim()
+            .replace(/^0+/, "") || "0";
+
+    const list =
+        imageData[type] || [];
+
+    return list.find(item => {
+
+        const itemId =
+            String(item.id)
+                .trim()
+                .replace(/^0+/, "") || "0";
+
+        return itemId === cleanId;
+
+    }) || null;
+
+}
+
+
+/* =========================================================
+   APPLY AVATAR NUMBER
+========================================================= */
+
+function applyAvatarNumber(side) {
+
+    const input =
+        document.getElementById(
+            side === "left"
+                ? "leftAvatarNumber"
+                : "rightAvatarNumber"
+        );
+
+    const image =
+        findImage(
+            "avatars",
+            input.value
+        );
+
+    if (!image) {
+
+        alert("找不到這個頭像編號。");
+
+        return;
+    }
+
+    if (side === "left") {
+
+        state.leftAvatar = image;
+
+    } else {
+
+        state.rightAvatar = image;
+
+    }
+
+    updateAvatarPreview();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   AVATAR PREVIEW
+========================================================= */
+
+function updateAvatarPreview() {
+
+    const left =
+        document.getElementById(
+            "leftAvatarPreview"
+        );
+
+    const right =
+        document.getElementById(
+            "rightAvatarPreview"
+        );
+
+
+    left.innerHTML =
+        state.leftAvatar
+            ? `<img src="${escapeAttribute(state.leftAvatar.file)}">`
+            : "";
+
+
+    right.innerHTML =
+        state.rightAvatar
+            ? `<img src="${escapeAttribute(state.rightAvatar.file)}">`
+            : "";
+
+}
+
+
+/* =========================================================
+   MESSAGES EDITOR
+========================================================= */
+
+function renderMessagesEditor() {
+
+    const container =
+        document.getElementById(
+            "messagesEditor"
+        );
+
+    container.innerHTML = "";
+
+
+    state.messages.forEach(
+        (message, index) => {
+
+            const box =
+                document.createElement("div");
+
+            box.className =
+                "message-editor";
+
+
+            box.innerHTML = `
+
+                <div class="message-editor-header">
+
+                    <span class="message-number">
+                        訊息 ${index + 1}
+                    </span>
+
+                    <div class="message-actions">
+
+                        <button
+                            class="btn btn-small"
+                            onclick="moveMessage(${index}, -1)"
+                        >
+                            ↑
+                        </button>
+
+                        <button
+                            class="btn btn-small"
+                            onclick="moveMessage(${index}, 1)"
+                        >
+                            ↓
+                        </button>
+
+                        <button
+                            class="btn btn-small btn-danger"
+                            onclick="deleteMessage(${index})"
+                        >
+                            刪除
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="message-editor-body">
+
+                    <div class="message-grid">
+
+                        <div>
+                            <label>位置</label>
+
+                            <select
+                                onchange="updateMessage(${index}, 'side', this.value)"
+                            >
+                                <option
+                                    value="left"
+                                    ${message.side === "left" ? "selected" : ""}
+                                >
+                                    左
+                                </option>
+
+                                <option
+                                    value="right"
+                                    ${message.side === "right" ? "selected" : ""}
+                                >
+                                    右
+                                </option>
+                            </select>
+                        </div>
+
+
+                        <div>
+                            <label>時間</label>
+
+                            <input
+                                value="${escapeAttribute(message.time || "")}"
+                                onchange="updateMessage(${index}, 'time', this.value)"
+                            >
+                        </div>
+
+
+                        <div>
+                            <label>訊息類型</label>
+
+                            <select
+                                onchange="updateMessageType(${index}, this.value)"
+                            >
+
+                                <option
+                                    value="text"
+                                    ${message.type === "text" ? "selected" : ""}
+                                >
+                                    文字
+                                </option>
+
+                                <option
+                                    value="image"
+                                    ${message.type === "image" ? "selected" : ""}
+                                >
+                                    圖片
+                                </option>
+
+                            </select>
+                        </div>
+
+
+                        <div>
+                            <label>已讀</label>
+
+                            <select
+                                onchange="updateMessage(${index}, 'read', this.value === 'true')"
+                            >
+
+                                <option
+                                    value="false"
+                                    ${!message.read ? "selected" : ""}
+                                >
+                                    未讀
+                                </option>
+
+                                <option
+                                    value="true"
+                                    ${message.read ? "selected" : ""}
+                                >
+                                    已讀
+                                </option>
+
+                            </select>
+                        </div>
+
+
+                        ${
+                            message.type === "text"
+                            ?
+                            `
+
+                            <div class="full">
+
+                                <label>文字</label>
+
+                                <textarea
+                                    oninput="updateMessage(${index}, 'text', this.value)"
+                                >${escapeHtml(message.text || "")}</textarea>
+
+                            </div>
+
+                            `
+                            :
+                            `
+
+                            <div class="full image-message-editor">
+
+                                <label>
+                                    圖片編號
+                                </label>
+
+                                <div style="display:flex;gap:5px;">
+
+                                    <input
+                                        id="messageImageNumber_${index}"
+                                        value="${escapeAttribute(
+                                            message.image
+                                                ? message.image.id
+                                                : ""
+                                        )}"
+                                        placeholder="例如 001"
+                                    >
+
+                                    <button
+                                        class="btn btn-small"
+                                        onclick="applyMessageImageNumber(${index})"
+                                    >
+                                        套用
+                                    </button>
+
+                                </div>
+
+
+                                <div
+                                    class="image-message-drop"
+                                    data-message-index="${index}"
+                                >
+
+                                    ${
+                                        message.image
+                                        ?
+                                        `
+                                        <div>
+
+                                            <img
+                                                class="image-message-preview"
+                                                src="${escapeAttribute(message.image.file)}"
+                                            >
+
+                                            <div>
+                                                ${escapeHtml(message.image.id)}
+                                                -
+                                                ${escapeHtml(message.image.name || "")}
+                                            </div>
+
+                                        </div>
+                                        `
+                                        :
+                                        `
+                                        把圖片拖到這裡
+                                        `
+                                    }
+
+                                </div>
+
+                            </div>
+
+                            `
+                        }
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(box);
+
+        }
+    );
+
+
+    setupMessageDropZones();
+
+}
+
+
+/* =========================================================
+   UPDATE MESSAGE
+========================================================= */
+
+function updateMessage(index, key, value) {
+
+    if (!state.messages[index]) {
+        return;
+    }
+
+    state.messages[index][key] = value;
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   UPDATE MESSAGE TYPE
+========================================================= */
+
+function updateMessageType(index, type) {
+
+    state.messages[index].type = type;
+
+    if (type === "image") {
+
+        state.messages[index].text = "";
+
+    } else {
+
+        state.messages[index].image = null;
+
+    }
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   ADD MESSAGE
+========================================================= */
+
+function addMessage() {
+
+    state.messages.push({
+
+        id: createId(),
+
+        side: "left",
+
+        time: "16:00",
+
+        read: false,
+
+        type: "text",
+
+        text: "新訊息",
+
+        image: null
+
+    });
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   DELETE MESSAGE
+========================================================= */
+
+function deleteMessage(index) {
+
+    state.messages.splice(index, 1);
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   MOVE MESSAGE
+========================================================= */
+
+function moveMessage(index, direction) {
+
+    const newIndex =
+        index + direction;
+
+    if (
+        newIndex < 0 ||
+        newIndex >= state.messages.length
+    ) {
+        return;
+    }
+
+
+    const temp =
+        state.messages[index];
+
+    state.messages[index] =
+        state.messages[newIndex];
+
+    state.messages[newIndex] =
+        temp;
+
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   APPLY MESSAGE IMAGE NUMBER
+========================================================= */
+
+function applyMessageImageNumber(index) {
+
+    const input =
+        document.getElementById(
+            `messageImageNumber_${index}`
+        );
+
+    const image =
+        findImage(
+            "pictures",
+            input.value
+        );
+
+    if (!image) {
+
+        alert("找不到這個圖片編號。");
+
+        return;
+    }
+
+
+    state.messages[index].type =
+        "image";
+
+    state.messages[index].image =
+        image;
+
+    state.messages[index].text =
+        "";
+
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   QUICK MESSAGE INPUT
+========================================================= */
+
+function applyQuickMessages() {
+
+    const textarea =
+        document.getElementById(
+            "quickMessages"
+        );
+
+    const lines =
+        textarea.value
+            .split("\n")
+            .map(line => line.trim())
+            .filter(Boolean);
+
+
+    const messages = [];
+
+
+    lines.forEach(line => {
+
+        const parts =
+            line.split("|");
+
+
+        if (parts.length < 3) {
+            return;
+        }
+
+
+        const side =
+            parts[0].trim() === "右"
+                ? "right"
+                : "left";
+
+
+        const time =
+            parts[1].trim();
+
+
+        const text =
+            parts
+                .slice(2)
+                .join("|")
+                .trim();
+
+
+        messages.push({
+
+            id: createId(),
+
+            side,
+
+            time,
+
+            read: false,
+
+            type: "text",
+
+            text,
+
+            image: null
+
+        });
+
+    });
+
+
+    if (!messages.length) {
+
+        alert(
+            "沒有讀到有效的訊息格式。"
+        );
+
+        return;
+    }
+
+
+    state.messages =
+        messages;
+
+
+    renderMessagesEditor();
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   DRAG & DROP
+========================================================= */
+
+function setupDragAndDrop() {
+
+    const avatarZones =
+        document.querySelectorAll(
+            ".avatar-drop"
+        );
+
+
+    avatarZones.forEach(zone => {
+
+        zone.addEventListener(
+            "dragover",
+            event => {
+
+                event.preventDefault();
+
+                zone.classList.add(
+                    "dragover"
+                );
+
+            }
+        );
+
+
+        zone.addEventListener(
+            "dragleave",
+            () => {
+
+                zone.classList.remove(
+                    "dragover"
+                );
+
+            }
+        );
+
+
+        zone.addEventListener(
+            "drop",
+            event => {
+
+                event.preventDefault();
+
+                zone.classList.remove(
+                    "dragover"
+                );
+
+
+                const payload =
+                    getDragPayload(event);
+
+
+                if (!payload) {
+                    return;
+                }
+
+
+                if (
+                    payload.type !==
+                    "avatars"
+                ) {
+
+                    alert(
+                        "請從「頭像」圖片庫拖曳圖片。"
+                    );
+
+                    return;
+                }
+
+
+                const side =
+                    zone.dataset.avatarSide;
+
+
+                if (side === "left") {
+
+                    state.leftAvatar =
+                        payload;
+
+                } else {
+
+                    state.rightAvatar =
+                        payload;
+
+                }
+
+
+                updateAvatarPreview();
+
+                updatePreview();
+
+            }
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   MESSAGE DROP ZONES
+========================================================= */
+
+function setupMessageDropZones() {
+
+    const zones =
+        document.querySelectorAll(
+            ".image-message-drop"
+        );
+
+
+    zones.forEach(zone => {
+
+        zone.addEventListener(
+            "dragover",
+            event => {
+
+                event.preventDefault();
+
+                zone.classList.add(
+                    "dragover"
+                );
+
+            }
+        );
+
+
+        zone.addEventListener(
+            "dragleave",
+            () => {
+
+                zone.classList.remove(
+                    "dragover"
+                );
+
+            }
+        );
+
+
+        zone.addEventListener(
+            "drop",
+            event => {
+
+                event.preventDefault();
+
+                zone.classList.remove(
+                    "dragover"
+                );
+
+
+                const payload =
+                    getDragPayload(event);
+
+
+                if (!payload) {
+                    return;
+                }
+
+
+                if (
+                    payload.type !==
+                    "pictures"
+                ) {
+
+                    alert(
+                        "請從「聊天圖片」圖片庫拖曳圖片。"
+                    );
+
+                    return;
+                }
+
+
+                const index =
+                    Number(
+                        zone.dataset.messageIndex
+                    );
+
+
+                if (
+                    !state.messages[index]
+                ) {
+                    return;
+                }
+
+
+                state.messages[index].type =
+                    "image";
+
+
+                state.messages[index].image =
+                    payload;
+
+
+                state.messages[index].text =
+                    "";
+
+
+                renderMessagesEditor();
+
+                updatePreview();
+
+            }
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   GET DRAG DATA
+========================================================= */
+
+function getDragPayload(event) {
+
+    try {
+
+        const text =
+            event.dataTransfer.getData(
+                "application/json"
+            );
+
+        return JSON.parse(text);
+
+    } catch {
+
+        return null;
+
+    }
+
+}
+
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+function updatePreview() {
+
+    const title =
+        document.getElementById(
+            "titleInput"
+        ).value;
+
+
+    const date =
+        document.getElementById(
+            "dateInput"
+        ).value;
+
+
+    const time =
+        document.getElementById(
+            "timeInput"
+        ).value;
+
+
+    const inputText =
+        document.getElementById(
+            "inputText"
+        ).value;
+
+
+    document.getElementById(
+        "previewTitle"
+    ).textContent =
+        title;
+
+
+    document.getElementById(
+        "previewDate"
+    ).textContent =
+        date;
+
+
+    document.getElementById(
+        "previewTime"
+    ).textContent =
+        time;
+
+
+    document.getElementById(
+        "previewInput"
+    ).textContent =
+        inputText;
+
+
+    updateAvatarPreview();
+
+    renderChat();
+
+}
+
+
+/* =========================================================
+   RENDER CHAT
+========================================================= */
+
+function renderChat() {
+
+    const body =
+        document.getElementById(
+            "chatBody"
+        );
+
+
+    body.innerHTML = "";
+
+
+    const leftName =
+        document.getElementById(
+            "leftName"
+        ).value;
+
+
+    const rightName =
+        document.getElementById(
+            "rightName"
+        ).value;
+
+
+    state.messages.forEach(
+        message => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                `message-row ${message.side}`;
+
+
+            const avatar =
+                message.side === "left"
+                    ? state.leftAvatar
+                    : state.rightAvatar;
+
+
+            const name =
+                message.side === "left"
+                    ? leftName
+                    : rightName;
+
+
+            /*
+             * 頭像
+             */
+
+            const avatarHtml =
+                avatar
+                    ?
+                    `
+                    <div class="message-avatar">
+                        <img
+                            src="${escapeAttribute(avatar.file)}"
+                        >
+                    </div>
+                    `
+                    :
+                    `
+                    <div class="message-avatar"></div>
+                    `;
+
+
+            /*
+             * 訊息內容
+             */
+
+            let contentHtml = "";
+
+
+            if (
+                message.type ===
+                "image" &&
+                message.image
+            ) {
+
+                contentHtml = `
+
+                    <div class="bubble">
+
+                        <img
+                            class="chat-image"
+                            src="${escapeAttribute(message.image.file)}"
+                        >
+
+                    </div>
+
+                `;
+
+            } else {
+
+                contentHtml = `
+
+                    <div class="bubble">
+                        ${escapeHtml(
+                            message.text || ""
+                        )}
+                    </div>
+
+                `;
+
+            }
+
+
+            /*
+             * 訊息內容區
+             */
+
+            const content =
+                document.createElement(
+                    "div"
+                );
+
+
+            content.className =
+                "message-content";
+
+
+            content.innerHTML = `
+
+                <div class="message-name">
+                    ${escapeHtml(name)}
+                </div>
+
+                ${contentHtml}
+
+                <div class="message-meta">
+
+                    <span>
+                        ${escapeHtml(
+                            message.time || ""
+                        )}
+                    </span>
+
+                    ${
+                        message.read
+                        ?
+                        `
+                        <span class="read">
+                            已讀
+                        </span>
+                        `
+                        :
+                        ""
+                    }
+
+                </div>
+
+            `;
+
+
+            if (message.side === "left") {
+
+                row.appendChild(
+                    createAvatarElement(
+                        avatar
+                    )
+                );
+
+                row.appendChild(
+                    content
+                );
+
+            } else {
+
+                row.appendChild(
+                    content
+                );
+
+                row.appendChild(
+                    createAvatarElement(
+                        avatar
+                    )
+                );
+
+            }
+
+
+            body.appendChild(row);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CREATE AVATAR ELEMENT
+========================================================= */
+
+function createAvatarElement(avatar) {
+
+    const div =
+        document.createElement("div");
+
+
+    div.className =
+        "message-avatar";
+
+
+    if (avatar) {
+
+        const img =
+            document.createElement("img");
+
+        img.src =
+            avatar.file;
+
+        div.appendChild(img);
+
+    }
+
+
+    return div;
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+function escapeAttribute(value) {
+
+    return escapeHtml(value);
+
+}
+
+
+/* =========================================================
+   WAIT FOR IMAGES
+========================================================= */
+
+async function waitForImages(container) {
+
+    const images =
+        Array.from(
+            container.querySelectorAll("img")
+        );
+
+
+    await Promise.all(
+
+        images.map(img => {
+
+            if (img.complete) {
+                return Promise.resolve();
+            }
+
+
+            return new Promise(resolve => {
+
+                img.addEventListener(
+                    "load",
+                    resolve,
+                    { once: true }
+                );
+
+                img.addEventListener(
+                    "error",
+                    resolve,
+                    { once: true }
+                );
+
+            });
+
+        })
+
+    );
+
+}
+
+
+/* =========================================================
+   DOWNLOAD PNG
+========================================================= */
+
+async function downloadChat() {
+
+    const chat =
+        document.getElementById(
+            "chat"
+        );
+
+
+    const scale =
+        Number(
+            document.getElementById(
+                "scaleSelect"
+            ).value
+        );
+
+
+    const button =
+        document.querySelector(
+            ".download-area .btn-primary"
+        );
+
+
+    const originalText =
+        button.textContent;
+
+
+    button.textContent =
+        "產生中...";
+
+
+    button.disabled =
+        true;
+
+
+    try {
+
+        /*
+         * 等圖片載入
+         */
+
+        await waitForImages(chat);
+
+
+        /*
+         * 等瀏覽器字型
+         */
+
+        if (
+            document.fonts &&
+            document.fonts.ready
+        ) {
+
+            await document.fonts.ready;
+
+        }
+
+
+        /*
+         * 使用 html2canvas
+         */
+
+        const canvas =
+            await html2canvas(
+                chat,
+                {
+
+                    scale,
+
+                    useCORS: true,
+
+                    allowTaint: false,
+
+                    backgroundColor:
+                        "#b2d7ff",
+
+                    logging: false
+
+                }
+            );
+
+
+        /*
+         * 下載
+         */
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+
+        const title =
+            document.getElementById(
+                "titleInput"
+            ).value
+            || "chat";
+
+
+        const filename =
+            sanitizeFilename(
+                title
+            ) + ".png";
+
+
+        link.download =
+            filename;
+
+
+        link.href =
+            canvas.toDataURL(
+                "image/png"
+            );
+
+
+        link.click();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "產生圖片時發生錯誤，請查看瀏覽器 Console。"
+        );
+
+    } finally {
+
+        button.textContent =
+            originalText;
+
+        button.disabled =
+            false;
+
+    }
+
+}
+
+
+/* =========================================================
+   FILENAME
+========================================================= */
+
+function sanitizeFilename(value) {
+
+    return String(value)
+        .replace(/[\\/:*?"<>|]/g, "_")
+        .replace(/\s+/g, "_")
+        .substring(0, 80)
+        || "chat";
+
+}
+
+</script>
+
+</body>
+</html>
